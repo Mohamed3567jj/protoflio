@@ -109,7 +109,7 @@ export default function Header({ onAuthClick, onDashboardClick, onLogoClick }: H
                   <span className="text-sm font-medium">{user.name}</span>
                   {user.isOwner && (
                     <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-semibold">
-                      OWNER
+                      👑
                     </span>
                   )}
                 </div>

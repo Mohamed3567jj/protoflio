@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Activity, Heart, MessageCircle, BarChart3, Edit, Save } from 'lucide-react';
+import { X, User, Activity, Heart, MessageCircle, BarChart3, Edit, Save, Users, Shield, Trash2, Crown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface DashboardProps {
@@ -49,9 +49,50 @@ export default function Dashboard({ onClose }: DashboardProps) {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <BarChart3 className="w-5 h-5" /> },
     { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" /> },
+    ...(user?.isOwner ? [{ id: 'users', label: 'All Users', icon: <Users className="w-5 h-5" /> }] : []),
     { id: 'activity', label: 'Activity', icon: <Activity className="w-5 h-5" /> },
     { id: 'favorites', label: 'Favorites', icon: <Heart className="w-5 h-5" /> },
   ];
+
+  const getAllUsers = () => {
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    return users.map(user => {
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
+  };
+
+  const deleteUser = (userId) => {
+    if (!user?.isOwner) return;
+    
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const updatedUsers = users.filter(u => u.id !== userId);
+    localStorage.setItem('users', JSON.stringify(updatedUsers));
+    
+    // Also remove from current user if it's the same
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (currentUser.id === userId) {
+      localStorage.removeItem('currentUser');
+      window.location.reload(); // Refresh to update auth state
+    }
+  };
+
+  const toggleOwnerStatus = (userId) => {
+    if (!user?.isOwner) return;
+    
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const updatedUsers = users.map(u => 
+      u.id === userId ? { ...u, isOwner: !u.isOwner } : u
+    );
+    localStorage.setItem('users', JSON.stringify(updatedUsers));
+    
+    // Update current user if it's the same
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (currentUser.id === userId) {
+      const updatedCurrentUser = { ...currentUser, isOwner: !currentUser.isOwner };
+      localStorage.setItem('currentUser', JSON.stringify(updatedCurrentUser));
+    }
+  };
 
   return (
     <div className="min-h-screen py-20 px-4">
@@ -69,6 +110,7 @@ export default function Dashboard({ onClose }: DashboardProps) {
                   <p className="text-blue-100">{user.email}</p>
                   {user.isOwner && (
                     <span className="inline-block bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-semibold mt-1">
+                      <Crown className="w-4 h-4 inline mr-1" />
                       OWNER
                     </span>
                   )}
@@ -191,6 +233,17 @@ export default function Dashboard({ onClose }: DashboardProps) {
                         <h4 className="font-semibold text-gray-800 dark:text-white">Activity Log</h4>
                         <p className="text-sm text-gray-600 dark:text-gray-400">Review your recent activities</p>
                       </button>
+                      
+                      {user?.isOwner && (
+                        <button
+                          onClick={() => setActiveTab('users')}
+                          className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-all text-left"
+                        >
+                          <Users className="w-8 h-8 text-purple-600 mb-2" />
+                          <h4 className="font-semibold text-gray-800 dark:text-white">Manage Users</h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">View and manage all users</p>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -282,79 +335,8 @@ export default function Dashboard({ onClose }: DashboardProps) {
                 </div>
               )}
 
-              {activeTab === 'activity' && (
+              {activeTab === 'users' && user?.isOwner && (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Activity Log</h2>
-                  
-                  <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-xl">
-                    <div className="space-y-4">
-                      {user.activities && user.activities.length > 0 ? (
-                        user.activities.map((activity, index) => (
-                          <div key={index} className="flex items-start space-x-4 p-4 bg-white dark:bg-gray-800 rounded-lg">
-                            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-                            <div className="flex-1">
-                              <p className="text-gray-800 dark:text-white">{activity}</p>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-gray-600 dark:text-gray-400 text-center py-8">
-                          No activities yet. Start interacting with the site to see your activity log!
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'favorites' && (
-                <div className="space-y-6">
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Favorite Projects</h2>
-                  
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {favoriteProjects.length > 0 ? (
-                      favoriteProjects.map((project: any) => (
-                        <div key={project.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                          <img
-                            src={project.image}
-                            alt={project.title}
-                            className="w-full h-32 object-cover rounded-lg mb-4"
-                          />
-                          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-                            {project.title}
-                          </h3>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                            {project.description}
-                          </p>
-                          <div className="flex justify-between items-center">
-                            <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                              {project.price}
-                            </span>
-                            <div className="flex items-center space-x-2 text-sm text-gray-500">
-                              <Heart className="w-4 h-4 text-red-500 fill-current" />
-                              <span>{project.likes.length}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="col-span-full text-center py-12">
-                        <Heart className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
-                          No favorites yet
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400">
-                          Start liking projects to see them here!
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">All Users</h2>
+                    <div className="bg-blue-100
