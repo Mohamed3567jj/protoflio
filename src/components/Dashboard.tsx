@@ -339,4 +339,144 @@ export default function Dashboard({ onClose }: DashboardProps) {
                 <div className="space-y-6">
                   <div className="flex justify-between items-center">
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-white">All Users</h2>
-                    <div className="bg-blue-100
+                    <div className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-semibold">
+                      Total Users: {getAllUsers().length}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-xl">
+                    <div className="space-y-4">
+                      {getAllUsers().map((userData) => (
+                        <div key={userData.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-red-500 rounded-full flex items-center justify-center text-white font-bold">
+                                {userData.name.charAt(0)}
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-800 dark:text-white flex items-center">
+                                  {userData.name}
+                                  {userData.isOwner && (
+                                    <Crown className="w-4 h-4 text-yellow-500 ml-2" />
+                                  )}
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">{userData.email}</p>
+                                {userData.age && (
+                                  <p className="text-sm text-gray-500">Age: {userData.age}</p>
+                                )}
+                                {userData.work && (
+                                  <p className="text-sm text-gray-500">Work: {userData.work}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => toggleOwnerStatus(userData.id)}
+                                className={`p-2 rounded-lg transition-colors ${
+                                  userData.isOwner
+                                    ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                                title={userData.isOwner ? 'Remove owner status' : 'Make owner'}
+                              >
+                                <Shield className="w-4 h-4" />
+                              </button>
+                              {userData.id !== user.id && (
+                                <button
+                                  onClick={() => deleteUser(userData.id)}
+                                  className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                                  title="Delete user"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'activity' && (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Activity Log</h2>
+                  <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-xl">
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
+                        <Activity className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <p className="font-medium text-gray-800 dark:text-white">Account Created</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Joined on {new Date(user.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
+                        <User className="w-5 h-5 text-green-600" />
+                        <div>
+                          <p className="font-medium text-gray-800 dark:text-white">Total Logins</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            You've logged in {user.loginCount} times
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'favorites' && (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Favorite Projects</h2>
+                  {favoriteProjects.length > 0 ? (
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {favoriteProjects.map((project) => (
+                        <div key={project.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                          <img
+                            src={project.image}
+                            alt={project.title}
+                            className="w-full h-48 object-cover"
+                          />
+                          <div className="p-6">
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+                              {project.title}
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 mb-4">
+                              {project.description}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {project.technologies.map((tech) => (
+                                <span
+                                  key={tech}
+                                  className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm"
+                                >
+                                  {tech}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Heart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                        No Favorite Projects Yet
+                      </h3>
+                      <p className="text-gray-500 dark:text-gray-500">
+                        Start exploring projects and like the ones you find interesting!
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
